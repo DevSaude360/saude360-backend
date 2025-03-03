@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 
 const authRoutes = require("./routes/auth");
+const deepseekRoutes = require("./routes/deepseek");
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/auth", authRoutes);
+app.use("/deepseek", deepseekRoutes);
 
 app.get("/", (req, res) => {
   res.send("Saúde360 API Running!");

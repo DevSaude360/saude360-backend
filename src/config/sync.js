@@ -1,5 +1,4 @@
 const sequelize = require("./database");
-const User = require("../models/User");
 
 sequelize
   .sync({ force: true }) // (remova em produção)

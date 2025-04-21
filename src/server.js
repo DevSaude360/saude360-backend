@@ -5,6 +5,8 @@ const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const deepseekRoutes = require("./routes/deepseek");
 const consultasRoutes = require("./routes/consultas");
+const pacientesRoutes= require("./routes/pacientes");
+const medicosRoutes  = require("./routes/medicos");
 
 const app = express();
 
@@ -14,6 +16,8 @@ app.use(cors());
 app.use("/auth", authRoutes);
 app.use("/deepseek", deepseekRoutes);
 app.use("/consultas", consultasRoutes);
+app.use("/pacientes", pacientesRoutes);
+app.use("/medicos",   medicosRoutes);
 
 app.get("/", (req, res) => {
   res.send("Saúde360 API Running!");

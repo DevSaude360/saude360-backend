@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
+const Medico = require("./medico");
 
 const MedicoLogin = sequelize.define("MedicoLogin", {
   id: {
@@ -7,16 +8,15 @@ const MedicoLogin = sequelize.define("MedicoLogin", {
     autoIncrement: true,
     primaryKey: true,
   },
-  name: {
-    type: DataTypes.STRING,
+  medico_id: {
+    type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: "medico",
+      key: "id",
+    },
   },
   email: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  crm: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
@@ -28,10 +28,12 @@ const MedicoLogin = sequelize.define("MedicoLogin", {
       this.setDataValue("password", value);
     },
   },
-},{
-    timestamps: true,
-    tableName: "medico_login",
-  }
-);
+}, {
+  tableName: "medico_login",
+  timestamps: true,
+});
+
+MedicoLogin.belongsTo(Medico, { foreignKey: "medico_id" });
+Medico.hasOne(MedicoLogin, { foreignKey: "medico_id" });
 
 module.exports = MedicoLogin;

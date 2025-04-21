@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
+const Paciente = require("./paciente");
 
 const PacienteLogin = sequelize.define("PacienteLogin", {
   id: {
@@ -7,9 +8,13 @@ const PacienteLogin = sequelize.define("PacienteLogin", {
     autoIncrement: true,
     primaryKey: true,
   },
-  name: {
-    type: DataTypes.STRING,
+  paciente_id: {
+    type: DataTypes.INTEGER,
     allowNull: false,
+    references: {
+      model: "paciente",
+      key: "id",
+    },
   },
   email: {
     type: DataTypes.STRING,
@@ -23,10 +28,12 @@ const PacienteLogin = sequelize.define("PacienteLogin", {
       this.setDataValue("password", value);
     },
   },
-},{
-    timestamps: true,
-    tableName: "paciente_login",
-  }
-);
+}, {
+  tableName: "paciente_login",
+  timestamps: true,
+});
+
+PacienteLogin.belongsTo(Paciente, { foreignKey: "paciente_id" });
+Paciente.hasOne(PacienteLogin, { foreignKey: "paciente_id" });
 
 module.exports = PacienteLogin;

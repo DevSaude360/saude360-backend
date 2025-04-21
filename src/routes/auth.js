@@ -1,123 +1,147 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const Paciente = require("../models/pacienteLogin");
-const Medico = require("../models/medicoLogin");
+
+const Medico      = require("../models/paciente");
+const PacienteLogin = require("../models/pacienteLogin");
+const Paciente    = require("../models/medico");
+const MedicoLogin   = require("../models/medicoLogin");
 
 const router = express.Router();
 
 /**
  * @route   POST /auth/register/paciente
- * @desc    Registra um novo paciente
- * @access  Público
+ * @desc    Registra os dados de login de um paciente
  */
 router.post("/register/paciente", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { pacienteId, email, password } = req.body;
 
-    const existingPaciente = await Paciente.findOne({ where: { email } });
-    if (existingPaciente) {
-      return res.status(400).json({ error: "E-mail já cadastrado!" });
+    const perfil = await Paciente.findByPk(pacienteId);
+    if (!perfil) {
+      return res.status(404).json({ error: "Paciente não encontrado" });
+    }
+
+    const exists = await PacienteLogin.findOne({
+      where: { 
+        [Sequelize.Op.or]: [
+          { paciente_id: pacienteId },
+          { email }
+        ]
+      }
+    });
+    if (exists) {
+      return res.status(400).json({ error: "Login já cadastrado para este paciente ou e‑mail já usado" });
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    
-    const paciente = await Paciente.create({ name, email, password: hashedPassword });
+    const hash = await bcrypt.hash(password, salt);
+    const login = await PacienteLogin.create({
+      paciente_id: pacienteId,
+      email,
+      password: hash,
+    });
 
-    res.status(201).json({ message: "Paciente registrado com sucesso!", paciente });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.status(201).json({ message: "Login de paciente criado", login });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
 /**
  * @route   POST /auth/register/medico
- * @desc    Registra um novo medico
- * @access  Público
+ * @desc    Registra os dados de login de um medico
  */
 router.post("/register/medico", async (req, res) => {
   try {
-    const { name, email, crm, password } = req.body;
+    const { medicoId, email, password } = req.body;
 
-    const existingMedico = await Medico.findOne({ where: { email } });
-    if (existingMedico) {
-      return res.status(400).json({ error: "E-mail já cadastrado!" });
+    const perfil = await Medico.findByPk(medicoId);
+    if (!perfil) {
+      return res.status(404).json({ error: "Médico não encontrado" });
+    }
+
+    const exists = await MedicoLogin.findOne({
+      where: {
+        [Sequelize.Op.or]: [
+          { medico_id: medicoId },
+          { email }
+        ]
+      }
+    });
+    if (exists) {
+      return res.status(400).json({ error: "Login já cadastrado para este médico ou e‑mail já usado" });
     }
 
     const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    
-    const medico = await Medico.create({ name, email, crm, password: hashedPassword });
+    const hash = await bcrypt.hash(password, salt);
+    const login = await MedicoLogin.create({
+      medico_id: medicoId,
+      email,
+      password: hash,
+    });
 
-    res.status(201).json({ message: "Paciente registrado com sucesso!", medico });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-    console.log(error);
+    return res.status(201).json({ message: "Login de médico criado", login });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
 /**
  * @route   POST /auth/login/paciente
  * @desc    Autentica o paciente e gera um token JWT
- * @access  Público
  */
 router.post("/login/paciente", async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    const paciente = await Paciente.findOne({ where: { email } });
-    if (!paciente) {
-      return res.status(401).json({ error: "E-mail ou senha inválidos!" });
+    const login = await PacienteLogin.findOne({ where: { email } });
+    if (!login) {
+      return res.status(401).json({ error: "E‑mail ou senha inválidos" });
     }
 
-    const hashFromDB = String(paciente.password).trim();
-
-    const isMatch = await bcrypt.compare(password, hashFromDB);
-
-    if (!isMatch) {
-      return res.status(401).json({ error: "E-mail ou senha inválidos!" });
+    const match = await bcrypt.compare(password, login.password.trim());
+    if (!match) {
+      return res.status(401).json({ error: "E‑mail ou senha inválidos" });
     }
 
-    const token = jwt.sign({ id: paciente.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { pacienteId: login.paciente_id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.json({ message: "Login bem-sucedido!", token });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.json({ message: "Login bem‑sucedido", token });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 
 /**
  * @route   POST /auth/login/medico
  * @desc    Autentica o medico e gera um token JWT
- * @access  Público
  */
 router.post("/login/medico", async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    const medico = await Medico.findOne({ where: { email } });
-    if (!medico) {
-      return res.status(401).json({ error: "E-mail ou senha inválidos!" });
+    const login = await MedicoLogin.findOne({ where: { email } });
+    if (!login) {
+      return res.status(401).json({ error: "E‑mail ou senha inválidos" });
     }
 
-    const hashFromDB = String(medico.password).trim();
-
-    const isMatch = await bcrypt.compare(password, hashFromDB);
-
-    if (!isMatch) {
-      return res.status(401).json({ error: "E-mail ou senha inválidos!" });
+    const match = await bcrypt.compare(password, login.password.trim());
+    if (!match) {
+      return res.status(401).json({ error: "E‑mail ou senha inválidos" });
     }
 
-    const token = jwt.sign({ id: medico.id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { medicoId: login.medico_id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    res.json({ message: "Login bem-sucedido!", token });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
+    return res.json({ message: "Login bem‑sucedido", token });
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 });
 

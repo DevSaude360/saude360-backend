@@ -2,9 +2,9 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const Medico      = require("../models/paciente");
+const Medico      = require("../models/Paciente");
 const PacienteLogin = require("../models/pacienteLogin");
-const Paciente    = require("../models/medico");
+const Paciente    = require("../models/Medico");
 const MedicoLogin   = require("../models/medicoLogin");
 
 const router = express.Router();

@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const sequelize = require("../config/database");
-const Medico = require("./medico");
+const Medico = require("./Medico");
 
 const MedicoLogin = sequelize.define("MedicoLogin", {
   id: {

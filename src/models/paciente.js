@@ -11,14 +11,21 @@ const Paciente = sequelize.define("Paciente", {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  crm: {
+  data_nascimento: DataTypes.DATE,
+  telefone: DataTypes.STRING,
+  endereco: DataTypes.TEXT,
+  email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
   },
-  data_nascimento: DataTypes.DATE,
-  telefone: DataTypes.STRING,
-  endereco: DataTypes.TEXT,
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    set(value) {
+      this.setDataValue("password", value);
+    },
+  },
 }, {
   tableName: "paciente",
   timestamps: true,

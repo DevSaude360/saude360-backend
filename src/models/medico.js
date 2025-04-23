@@ -18,7 +18,18 @@ const Medico = sequelize.define("Medico", {
   },
   especialidade: DataTypes.STRING,
   telefone: DataTypes.STRING,
-  endereco: DataTypes.TEXT,
+  email: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    set(value) {
+      this.setDataValue("password", value);
+    },
+  },
 }, {
   tableName: "medico",
   timestamps: true,

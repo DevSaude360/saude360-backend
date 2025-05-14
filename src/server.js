@@ -1,31 +1,36 @@
 require("dotenv").config();
-const express = require("express");
-const cors = require("cors");
 
-const authRoutes = require("./routes/auth");
-const deepseekRoutes = require("./routes/deepseek");
-const consultasRoutes = require("./routes/consultas");
-const pacientesRoutes= require("./routes/pacientes");
-const medicosRoutes  = require("./routes/medicos");
-const examesRoutes = require("./routes/exames");
+const app       = require("./app");
+const sequelize = require("./config/database");
 
-const app = express();
+const INITIAL_PORT = parseInt(process.env.PORT, 10) || 5000;
 
-app.use(express.json());
-app.use(cors());
+async function startServer(port) {
+  try {
+    await sequelize.sync({
+      force: process.env.NODE_ENV === "development",
+    });
+    console.log("Banco de dados sincronizado!");
 
-app.use("/auth", authRoutes);
-app.use("/deepseek", deepseekRoutes);
-app.use("/consultas", consultasRoutes);
-app.use("/pacientes", pacientesRoutes);
-app.use("/medicos",   medicosRoutes);
-app.use("/exames", examesRoutes);
+    const server = app.listen(port, () => {
+      console.log(`Server rodando na porta ${port}`);
+    });
 
-app.get("/", (req, res) => {
-  res.send("Saúde360 API Running!");
-});
+    server.on("error", (err) => {
+      if (err.code === "EADDRINUSE") {
+        console.warn(
+            `Porta ${port} em uso, tentando a próxima (${port + 1})…`
+        );
+        startServer(port + 1);
+      } else {
+        console.error("Erro no servidor:", err);
+        process.exit(1);
+      }
+    });
+  } catch (err) {
+    console.error("Falha ao sincronizar o banco:", err);
+    process.exit(1);
+  }
+}
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+startServer(INITIAL_PORT);

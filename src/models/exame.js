@@ -1,8 +1,9 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/database");
 const Paciente = require("./Paciente");
 
-const Exame = sequelize.define("Exame", {
+class Exame extends Model {}
+Exame.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -44,11 +45,11 @@ const Exame = sequelize.define("Exame", {
     defaultValue: "solicitado",
   },
 }, {
+  sequelize,
+  modelName: "Exame",
   tableName: "exame",
+  underscored: true,
   timestamps: true,
 });
-
-Exame.belongsTo(Paciente, { foreignKey: "paciente_id" });
-Paciente.hasMany(Exame, { foreignKey: "paciente_id" });
 
 module.exports = Exame;

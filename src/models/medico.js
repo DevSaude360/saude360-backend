@@ -1,11 +1,17 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/database");
 
-const Medico = sequelize.define("Medico", {
+class Medico extends Model {}
+Medico.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
+  },
+  credencial_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: { model: "credencial", key: "id" },
   },
   name: {
     type: DataTypes.STRING,
@@ -23,15 +29,11 @@ const Medico = sequelize.define("Medico", {
     allowNull: false,
     unique: true,
   },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    set(value) {
-      this.setDataValue("password", value);
-    },
-  },
-}, {
+},  {
+  sequelize,
+  modelName: "Medico",
   tableName: "medico",
+  underscored: true,
   timestamps: true,
 });
 

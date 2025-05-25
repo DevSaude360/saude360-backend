@@ -9,16 +9,16 @@ const Paciente = require("../models/Paciente");
  */ 
 router.post("/", async (req, res) => {
   try {
-    const { name, crm, data_nascimento, telefone, endereco } = req.body;
+    const { name, email, data_nascimento, telefone, endereco } = req.body;
 
-    const exists = await Paciente.findOne({ where: { crm } });
-    if (exists) {
-      return res.status(400).json({ error: "CRM já cadastrado para outro paciente" });
+    const existingPaciente = await Paciente.findOne({ where: { email } });
+    if (existingPaciente) {
+      return res.status(400).json({ error: "Email já cadastrado para outro paciente" });
     }
 
     const paciente = await Paciente.create({
       name,
-      crm,
+      email,
       data_nascimento,
       telefone,
       endereco
@@ -26,7 +26,8 @@ router.post("/", async (req, res) => {
 
     return res.status(201).json({ message: "Paciente cadastrado", paciente });
   } catch (err) {
-    return res.status(500).json({ error: err.message });
+    console.error("Erro ao cadastrar paciente:", err);
+    return res.status(500).json({ error: "Falha ao cadastrar paciente", details: err.message });
   }
 });
 

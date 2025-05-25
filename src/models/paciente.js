@@ -17,7 +17,7 @@ Paciente.init({
     type: DataTypes.STRING,
     allowNull: false,
   },
-  data_nascimento: DataTypes.DATE,
+  birthDate: DataTypes.DATE,
   telefone: DataTypes.STRING,
   endereco: DataTypes.TEXT,
   email: {

@@ -25,7 +25,7 @@ const authenticateToken = (req, res, next) => {
  */
 router.post("/register/paciente", async (req, res) => {
   try {
-    const { name, data_nascimento, telefone, endereco, email } = req.body;
+    const { name, birthDate, telefone, endereco, email } = req.body;
 
     if (!email || !name) {
       return res.status(400).json({ error: "Nome e e-mail são obrigatórios para registrar paciente." });
@@ -40,7 +40,7 @@ router.post("/register/paciente", async (req, res) => {
 
     const paciente = await Paciente.create({
       name,
-      data_nascimento,
+      birthDate,
       telefone,
       endereco,
       email,

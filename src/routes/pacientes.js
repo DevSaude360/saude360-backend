@@ -9,7 +9,7 @@ const Paciente = require("../models/Paciente");
  */ 
 router.post("/", async (req, res) => {
   try {
-    const { name, email, data_nascimento, telefone, endereco } = req.body;
+    const { name, email, birthDate, telefone, endereco } = req.body;
 
     const existingPaciente = await Paciente.findOne({ where: { email } });
     if (existingPaciente) {
@@ -19,7 +19,7 @@ router.post("/", async (req, res) => {
     const paciente = await Paciente.create({
       name,
       email,
-      data_nascimento,
+      birthDate,
       telefone,
       endereco
     });

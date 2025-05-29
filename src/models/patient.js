@@ -1,40 +1,41 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/database");
 
-class Medico extends Model {}
-Medico.init({
+class Patient extends Model {}
+Patient.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-  credencial_id: {
+  credential_id: {
     type: DataTypes.INTEGER,
-    allowNull: false,
-    references: { model: "credencial", key: "id" },
+    allowNull: true,
+    references: { model: "credential", key: "id" },
   },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  registro: {
-    type: DataTypes.STRING,
-    allowNull: false,
-    unique: true,
-  },
-  especialidade: DataTypes.STRING,
-  telefone: DataTypes.STRING,
+  birthDate: DataTypes.DATE,
+  phone_number: DataTypes.STRING,
+  address: DataTypes.TEXT,
   email: {
     type: DataTypes.STRING,
     allowNull: false,
     unique: true,
   },
-},  {
+  has_password: {
+    allowNull: false,
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  }
+}, {
   sequelize,
-  modelName: "Medico",
-  tableName: "medico",
+  modelName: "Patient",
+  tableName: "patient",
   underscored: true,
   timestamps: true,
 });
 
-module.exports = Medico;
+module.exports = Patient;

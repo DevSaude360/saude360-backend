@@ -1,6 +1,6 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/database");
-const Paciente = require("./Paciente");
+const Patient = require("./patient");
 
 class Exame extends Model {}
 Exame.init({
@@ -9,10 +9,10 @@ Exame.init({
     autoIncrement: true,
     primaryKey: true,
   },
-  paciente_id: {
+  patient_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: { model: "paciente", key: "id" },
+    references: { model: "patient", key: "id" },
   },
   tipo_exame: {
     type: DataTypes.STRING,

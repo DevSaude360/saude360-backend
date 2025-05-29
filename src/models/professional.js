@@ -1,25 +1,29 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/database");
 
-class Paciente extends Model {}
-Paciente.init({
+class Professional extends Model {}
+Professional.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
     primaryKey: true,
   },
-  credencial_id: {
+  credential_id: {
     type: DataTypes.INTEGER,
-    allowNull: true,
-    references: { model: "credencial", key: "id" },
+    allowNull: false,
+    references: { model: "credential", key: "id" },
   },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  birthDate: DataTypes.DATE,
-  telefone: DataTypes.STRING,
-  endereco: DataTypes.TEXT,
+  register: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true,
+  },
+  specialty: DataTypes.STRING,
+  phone_number: DataTypes.STRING,
   email: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -30,12 +34,12 @@ Paciente.init({
     type: DataTypes.BOOLEAN,
     defaultValue: false,
   }
-}, {
+},  {
   sequelize,
-  modelName: "Paciente",
-  tableName: "paciente",
+  modelName: "Professional",
+  tableName: "professional",
   underscored: true,
   timestamps: true,
 });
 
-module.exports = Paciente;
+module.exports = Professional;

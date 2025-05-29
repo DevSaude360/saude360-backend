@@ -1,31 +1,32 @@
 const sequelize   = require("../config/database");
 
-const Credencial = require("./Credencial");
-const Paciente   = require("./Paciente");
-const Medico     = require("./Medico");
-const Consulta   = require("./Consulta");
+const Credential = require("./credential");
+const Patient   = require("./patient");
+const Professional = require("./professional");
+
+const Appointment   = require("./appointment");
 const Exame      = require("./Exame");
 
-Credencial.hasOne(Paciente,   { foreignKey: "credencial_id" });
-Paciente.belongsTo(Credencial, { foreignKey: "credencial_id" });
+Credential.hasOne(Patient,   { foreignKey: "credential_id" });
+Patient.belongsTo(Credential, { foreignKey: "credential_id" });
 
-Credencial.hasOne(Medico,     { foreignKey: "credencial_id" });
-Medico.belongsTo(Credencial,  { foreignKey: "credencial_id" });
+Credential.hasOne(Professional,     { foreignKey: "credential_id" });
+Professional.belongsTo(Credential,  { foreignKey: "credential_id" });
 
-Paciente.hasMany(Consulta,    { foreignKey: "paciente_id" });
-Consulta.belongsTo(Paciente,  { foreignKey: "paciente_id" });
+Patient.hasMany(Appointment, { foreignKey: "patient_id", as: "appointments" });
+Appointment.belongsTo(Patient, { foreignKey: "patient_id", as: "patient" });
 
-Medico.hasMany(Consulta,      { foreignKey: "medico_id" });
-Consulta.belongsTo(Medico,    { foreignKey: "medico_id" });
+Professional.hasMany(Appointment, { foreignKey: "professional_id", as: "appointments" });
+Appointment.belongsTo(Professional, { foreignKey: "professional_id", as: "professional" });
 
-Paciente.hasMany(Exame,       { foreignKey: "paciente_id" });
-Exame.belongsTo(Paciente,     { foreignKey: "paciente_id" });
+Patient.hasMany(Exame,       { foreignKey: "patient_id" });
+Exame.belongsTo(Patient,     { foreignKey: "patient_id" });
 
 module.exports = {
     sequelize,
-    Credencial,
-    Paciente,
-    Medico,
-    Consulta,
+    Credential,
+    Patient,
+    Professional,
+    Appointment,
     Exame,
 };

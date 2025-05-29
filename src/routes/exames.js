@@ -1,7 +1,7 @@
 const express = require("express");
 const router  = express.Router();
 const Exame    = require("../models/exame");
-const Paciente = require("../models/Paciente");
+const Patient = require("../models/patient");
 
 /**
  * @route   POST /exames
@@ -10,7 +10,7 @@ const Paciente = require("../models/Paciente");
 router.post("/", async (req, res) => {
   try {
     const {
-      pacienteId,
+      patientId,
       tipoExame,
       dataColeta,
       resultado,
@@ -19,13 +19,13 @@ router.post("/", async (req, res) => {
       observacoes
     } = req.body;
 
-    const perfil = await Paciente.findByPk(pacienteId);
+    const perfil = await Patient.findByPk(patientId);
     if (!perfil) {
       return res.status(404).json({ error: "Paciente não encontrado" });
     }
 
     const exame = await Exame.create({
-      paciente_id: pacienteId,
+      patient_id: patientId,
       tipo_exame: tipoExame,
       data_coleta: dataColeta,
       resultado,
@@ -42,13 +42,13 @@ router.post("/", async (req, res) => {
 });
 
 /**
- * @route   GET /exames/paciente/:pacienteId
+ * @route   GET /exames/patient/:patientId
  * @desc    Lista todos os exames de um paciente
  */
-router.get("/paciente/:pacienteId", async (req, res) => {
+router.get("/patient/:patientId", async (req, res) => {
   try {
     const exames = await Exame.findAll({
-      where: { paciente_id: req.params.pacienteId },
+      where: { patient_id: req.params.patientId },
       order: [["data_solicitacao", "DESC"]],
     });
     return res.json({ exames });
@@ -64,7 +64,7 @@ router.get("/paciente/:pacienteId", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const exame = await Exame.findByPk(req.params.id, {
-      include: [{ model: Paciente, attributes: ["id", "name", "crm"] }]
+      include: [{ model: Patient, attributes: ["id", "name", "crm"] }]
     });
     if (!exame) {
       return res.status(404).json({ error: "Exame não encontrado" });

@@ -1,8 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
-const sequelize = require("../config/database");
+const sequelize = require("../config/database"); // Ajuste o caminho se necessário
 
-class Credencial extends Model {}
-Credencial.init({
+class Credential extends Model {}
+
+Credential.init({
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -19,10 +20,10 @@ Credencial.init({
     },
 }, {
     sequelize,
-    modelName: "Credencial",
-    tableName: "credencial",
+    modelName: "Credential",
+    tableName: "credential",
     underscored: true,
     timestamps: true,
 });
 
-module.exports = Credencial;
+module.exports = Credential;

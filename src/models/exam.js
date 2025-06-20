@@ -1,9 +1,9 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/database");
-const Patient = require("./patient");
 
-class Exame extends Model {}
-Exame.init({
+class Exam extends Model {}
+
+Exam.init({
   id: {
     type: DataTypes.INTEGER,
     autoIncrement: true,
@@ -12,44 +12,57 @@ Exame.init({
   patient_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    references: { model: "patient", key: "id" },
+    references: {
+      model: 'patient',
+      key: 'id',
+    }
   },
-  tipo_exame: {
+  examType: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  data_solicitacao: {
+  requestDate: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW,
   },
-  data_coleta: {
+  collectionDate: {
     type: DataTypes.DATE,
+    allowNull: true,
   },
-  data_resultado: {
+  resultDate: {
     type: DataTypes.DATE,
+    allowNull: true,
   },
-  resultado: {
+  result: {
     type: DataTypes.TEXT,
+    allowNull: true,
   },
-  unidade: {
+  unit: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
-  valor_referencia: {
+  referenceValue: {
     type: DataTypes.STRING,
+    allowNull: true,
   },
-  observacoes: {
+  observations: {
     type: DataTypes.TEXT,
+    allowNull: true,
   },
-  status: {
-    type: DataTypes.ENUM("solicitado", "coletado", "processado", "finalizado"),
-    defaultValue: "solicitado",
+  status_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'exam_status',
+      key: 'id',
+    }
   },
 }, {
   sequelize,
-  modelName: "Exame",
-  tableName: "exame",
+  modelName: "Exam",
+  tableName: "exams",
   underscored: true,
   timestamps: true,
 });
 
-module.exports = Exame;
+module.exports = Exam;

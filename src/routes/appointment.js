@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { Op } = require("sequelize");
 
 const { Appointment, Patient, Professional } = require("../models");
 const { StatusAgendamentoEnum, StatusAgendamentoDescricao } = require("../enums/statusAgendamentoEnum");
@@ -447,5 +448,53 @@ router.get("/professional/:professionalId/patient/:patientId", async (req, res) 
     res.status(500).json({ error: "Falha ao listar as consultas especificadas.", details: err.message });
   }
 });
+
+/**
+ * @route   GET /appointments/patient/:patientId/by-date
+ * @desc    Busca as consultas de um paciente numa data específica
+ */
+router.get("/patient/:patientId/by-date", async (req, res) => {
+  try {
+    const { patientId } = req.params;
+    const { date } = req.query;
+
+    if (!date) {
+      return res.status(400).json({ error: "O parâmetro 'date' (com a data no formato AAAA-MM-DD) é obrigatório." });
+    }
+
+    const patientExists = await Patient.findByPk(patientId);
+    if (!patientExists) {
+      return res.status(404).json({ error: "Paciente não encontrado." });
+    }
+
+    const dataInicio = new Date(`${date}T00:00:00.000Z`);
+    const dataFim = new Date(`${date}T23:59:59.999Z`);
+
+    const appointments = await Appointment.findAll({
+      where: {
+        patient_id: patientId,
+        appointment_date: {
+          [Op.between]: [dataInicio, dataFim]
+        }
+      },
+
+      include: [
+        {
+          model: Professional,
+          as: 'professional',
+          attributes: ["id", "name", "specialty"]
+        },
+      ],
+      order: [["appointment_date", "ASC"]],
+    });
+
+    return res.status(200).json({ appointments: adicionarDescricaoStatusParaLista(appointments) });
+
+  } catch (err) {
+    console.error("Erro ao buscar consultas do paciente por data:", err);
+    return res.status(500).json({ error: "Falha ao buscar as consultas.", details: err.message });
+  }
+});
+
 
 module.exports = router;

@@ -10,6 +10,7 @@ const patientRoutes = require("./routes/patient");
 const professionalRoutes = require("./routes/professional");
 const examsRoutes = require("./routes/exam");
 const documentRoutes = require("./routes/document")
+const timelineRoutes = require("./routes/timeline")
 
 const app = express();
 app.use(express.json());
@@ -23,6 +24,7 @@ app.use("/patient", patientRoutes);
 app.use("/professionals", professionalRoutes);
 app.use("/exams", examsRoutes);
 app.use("/documents", documentRoutes);
+app.use("/timeline", timelineRoutes);
 
 app.get("/", (req, res) => res.send("Saúde360 API Running!"));
 

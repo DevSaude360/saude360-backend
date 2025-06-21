@@ -1,8 +1,8 @@
 const express = require("express");
+const { Op } = require("sequelize");
 const router  = express.Router();
 
-const Patient = require("../models/patient");
-const Credential = require("../models/credential");
+const { Patient, Credential, Appointment, Professional } = require("../models");
 
 /**
  * @route   POST /patient
@@ -154,6 +154,49 @@ router.delete("/:id", async (req, res) => {
   } catch (err) {
     console.error("Erro ao deletar paciente:", err);
     return res.status(500).json({ error: "Falha ao deletar paciente.", details: err.message });
+  }
+});
+
+/**
+ * @route   GET /patient/:patientId/professionals
+ * @desc    Lista todos os profissionais que atenderam um paciente
+ */
+router.get("/:patientId/professionals", async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const patient = await Patient.findByPk(patientId);
+    if (!patient) {
+      return res.status(404).json({ error: "Paciente não encontrado." });
+    }
+
+    const appointments = await Appointment.findAll({
+      where: { patient_id: patientId },
+      attributes: ['professional_id'],
+      raw: true,
+    });
+
+    if (appointments.length === 0) {
+      return res.json({ professionals: [] });
+    }
+
+    const professionalIds = appointments.map(app => app.professional_id);
+    const uniqueProfessionalIds = [...new Set(professionalIds)];
+
+    const professionals = await Professional.findAll({
+      where: {
+        id: {
+          [Op.in]: uniqueProfessionalIds
+        }
+      },
+      attributes: ['id', 'name', 'register', 'specialty', 'email', 'phone_number']
+    });
+
+    return res.status(200).json({ professionals });
+
+  } catch (err) {
+    console.error("Erro ao buscar profissionais do paciente:", err);
+    return res.status(500).json({ error: "Falha ao buscar a lista de profissionais.", details: err.message });
   }
 });
 

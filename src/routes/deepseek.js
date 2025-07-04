@@ -10,6 +10,8 @@ require('dotenv').config();
 const router = express.Router();
 
 const SUPABASE_PDF_BUCKET = 'prontuarios-pdf';
+const DEEPSEEK_API_URL = process.env.DEEPSEEK_API_URL;
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 
 /**
  * Busca dados da consulta no banco local e usa a IA para gerar um sumário.
@@ -60,8 +62,8 @@ async function gerarDadosCompletos(appointmentId) {
     temperature: 0.7,
   };
 
-  const response = await axios.post(process.env.DEEPSEEK_API_URL, prompt, {
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.KEY_DEEPSEEK}` },
+  const response = await axios.post(DEEPSEEK_API_URL, prompt, {
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${DEEPSEEK_API_KEY}` },
   });
 
   const sumarioGerado = response.data.choices[0].message.content || "Não foi possível gerar o sumário.";
@@ -87,11 +89,7 @@ async function gerarPdfBuffer(appointment, sumarioHtml, exams) {
             body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; margin: 40px; color: #333; }
             .header { text-align: center; border-bottom: 2px solid #007bff; padding-bottom: 10px; margin-bottom: 30px; }
             .header h1 { margin: 0; color: #007bff; }
-            
-            /* --- A MUDANÇA ESTÁ AQUI --- */
-            /* Removemos a regra 'page-break-inside: avoid;' para permitir que o conteúdo flua entre as páginas */
             .section { margin-bottom: 25px; } 
-
             .section h2 { font-size: 18px; color: #0056b3; border-bottom: 1px solid #eee; padding-bottom: 5px; margin-bottom: 15px; }
             .details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 20px; }
             .details-grid div { padding: 5px 0; }
@@ -220,19 +218,87 @@ router.get("/prontuarios/:geracaoId/download", async (req, res) => {
 });
 
 /**
- * @route   POST /remedios
+ * @route   POST /deepseek/remedios
  * @desc    Busca informações de um remédio.
  */
 router.post("/remedios", async (req, res) => {
-  // ... (código do endpoint de remédios que criamos)
+  try {
+    const { nomeRemedio } = req.body;
+    if (!nomeRemedio) return res.status(400).json({ error: "O campo 'nomeRemedio' é obrigatório!" });
+
+    const prompt = `
+      Pesquise informações sobre o remédio "${nomeRemedio}" com foco no mercado brasileiro.
+
+      Sua resposta deve ser **apenas** um objeto JSON puro e completo, sem formatação extra como \`\`\`json.
+
+      O JSON deve conter os seguintes campos: "nome", "valor_aproximado", "principio_ativo", "fabricante" e "descricao".
+
+      **Regras Cruciais para a Resposta:**
+      1. O campo "valor_aproximado" **deve sempre** conter uma estimativa de preço em Reais, usando o símbolo "R$". Por exemplo: "R$ 10,50 - R$ 25,00".
+      2. Se um preço específico não for encontrado, o valor do campo "valor_aproximado" deve ser a string "Valor não encontrado".
+      3. Se o remédio em si for inválido ou não encontrado, retorne um JSON com a chave "remedio" e o valor null.
+
+      **Exemplo de resposta bem-sucedida:**
+      {
+        "nome": "Dipirona Monoidratada 500mg",
+        "valor_aproximado": "R$ 5,00 - R$ 15,00",
+        "principio_ativo": "Dipirona Monoidratada",
+        "fabricante": "Medley",
+        "descricao": "Analgésico e antitérmico indicado para o alívio de dores e febre."
+      }
+    `;
+
+    const response = await axios.post(DEEPSEEK_API_URL, {
+          model: "deepseek-chat",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.2,
+        }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${DEEPSEEK_API_KEY}` } }
+    );
+
+    const respostaBruta = response.data.choices[0].message.content || "{}";
+    const respostaLimpa = respostaBruta.replace(/```json|```/g, "").trim();
+    const jsonFinal = JSON.parse(respostaLimpa);
+
+    if (jsonFinal.remedio === null) return res.status(404).json({ message: "Remédio não encontrado." });
+    res.json(jsonFinal);
+  } catch (error) {
+    console.error("ERRO DETALHADO em /remedios:", error.message);
+    res.status(500).json({ error: "Falha ao buscar informações do remédio." });
+  }
 });
 
+
 /**
- * @route   POST /farmacias
+ * @route   POST /deepseek/farmacias
  * @desc    Busca farmácias próximas a um CEP.
  */
 router.post("/farmacias", async (req, res) => {
-  // ... (código do endpoint de farmácias que você já tinha)
+  try {
+    const { cep } = req.body;
+    if (!cep) return res.status(400).json({ error: "O campo 'cep' é obrigatório!" });
+
+    const prompt = `
+      Liste as 5 farmácias mais próximas do CEP: ${cep} no Brasil.
+      Responda apenas com um JSON contendo uma chave "farmacias" que é uma lista de objetos.
+      Cada objeto deve ter "nome", "distancia", "endereco", "telefone".
+    `;
+    const response = await axios.post(DEEPSEEK_API_URL, {
+          model: "deepseek-chat",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.7,
+        }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${DEEPSEEK_API_KEY}` } }
+    );
+
+    const respostaBruta = response.data.choices[0].message.content || "{}";
+    const respostaLimpa = respostaBruta.replace(/```json|```/g, "").trim();
+    const jsonFinal = JSON.parse(respostaLimpa);
+
+    res.json(jsonFinal);
+  } catch (error) {
+    console.error("ERRO DETALHADO em /farmacias:", error.message);
+    res.status(500).json({ error: "Falha ao buscar farmácias." });
+  }
 });
+
 
 module.exports = router;

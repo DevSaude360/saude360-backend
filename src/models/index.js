@@ -8,6 +8,7 @@ const Timeline = require('./timeline');
 const Exam = require('./Exam');
 const ExamStatus = require('./ExamStatus');
 const Document = require('./Document');
+const Prescription = require('./prescription');
 
 Credential.hasOne(Patient,   { foreignKey: "credential_id" });
 Patient.belongsTo(Credential, { foreignKey: "credential_id" });
@@ -33,6 +34,15 @@ Document.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
 Appointment.hasMany(Timeline, { foreignKey: 'appointment_id', as: 'actions' });
 Timeline.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
 
+Appointment.hasMany(Exam, { foreignKey: 'appointment_id', as: 'exams' });
+Exam.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
+
+Prescription.belongsTo(Appointment, { foreignKey: 'appointment_id', as: 'appointment' });
+Appointment.hasMany(Prescription, { foreignKey: 'appointment_id', as: 'prescriptions' });
+
+Prescription.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+Patient.hasMany(Prescription, { foreignKey: 'patient_id', as: 'prescriptions' });
+
 module.exports = {
     sequelize,
     Credential,
@@ -41,5 +51,7 @@ module.exports = {
     Appointment,
     Timeline,
     Exam,
+    ExamStatus,
     Document,
+    Prescription,
 };

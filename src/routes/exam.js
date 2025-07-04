@@ -1,8 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Exam = require("../models/Exam");
-const Patient = require("../models/Patient");
-const ExamStatus = require("../models/ExamStatus");
+const { Op } = require("sequelize");
+const { Exam, Patient, Professional, Appointment, ExamStatus } = require("../models");
 
 const EXAM_STATUS_IDS = {
   SOLICITADO: 1,
@@ -18,7 +17,7 @@ const EXAM_STATUS_IDS = {
  */
 router.post("/", async (req, res) => {
   try {
-    const { patientId, examType, collectionDate, observations } = req.body;
+    const { patientId, appointmentId, examType, collectionDate, observations } = req.body;
 
     if (!patientId || !examType) {
       return res.status(400).json({ error: "ID do Paciente (patientId) e Tipo de Exame (examType) são obrigatórios." });
@@ -29,8 +28,19 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: "Paciente não encontrado." });
     }
 
+    if (appointmentId) {
+      const appointment = await Appointment.findByPk(appointmentId);
+      if (!appointment) {
+        return res.status(404).json({ error: "Consulta (appointment) não encontrada." });
+      }
+      if (appointment.patient_id !== parseInt(patientId)) {
+        return res.status(400).json({ error: "A consulta informada não pertence a este paciente." });
+      }
+    }
+
     const exam = await Exam.create({
       patient_id: patientId,
+      appointment_id: appointmentId || null,
       examType,
       collectionDate,
       observations,
@@ -38,7 +48,11 @@ router.post("/", async (req, res) => {
     });
 
     const newExamWithDetails = await Exam.findByPk(exam.id, {
-      include: [{ model: Patient, as: 'patient' }, { model: ExamStatus, as: 'status' }]
+      include: [
+        { model: Patient, as: 'patient' },
+        { model: Appointment, as: 'appointment' },
+        { model: ExamStatus, as: 'status' }
+      ]
     });
 
     return res.status(201).json({ message: "Exame cadastrado com sucesso!", exam: newExamWithDetails });
@@ -57,7 +71,8 @@ router.get("/", async (req, res) => {
     const exams = await Exam.findAll({
       include: [
         { model: Patient, as: 'patient', attributes: ['id', 'name'] },
-        { model: ExamStatus, as: 'status' }
+        { model: ExamStatus, as: 'status' },
+        { model: Appointment, as: 'appointment', attributes: ['id', 'appointment_date'] }
       ],
       order: [["requestDate", "DESC"]],
     });
@@ -82,7 +97,15 @@ router.get("/patient/:patientId", async (req, res) => {
     }
     const exams = await Exam.findAll({
       where: { patient_id: patientId },
-      include: [{ model: ExamStatus, as: 'status' }],
+      include: [
+        { model: ExamStatus, as: 'status' },
+        {
+          model: Appointment,
+          as: 'appointment',
+          required: false,
+          include: [{ model: Professional, as: 'professional', attributes: ['id', 'name']}]
+        }
+      ],
       order: [["requestDate", "DESC"]],
     });
     return res.json({ exams });
@@ -101,7 +124,12 @@ router.get("/:id", async (req, res) => {
     const exam = await Exam.findByPk(req.params.id, {
       include: [
         { model: Patient, as: 'patient', attributes: ["id", "name", "email"] },
-        { model: ExamStatus, as: 'status' }
+        { model: ExamStatus, as: 'status' },
+        {
+          model: Appointment,
+          as: 'appointment',
+          include: [{ model: Professional, as: 'professional', attributes: ['id', 'name', 'specialty'] }]
+        }
       ]
     });
     if (!exam) {
@@ -129,7 +157,11 @@ router.put("/:id", async (req, res) => {
     await exam.update(req.body);
 
     const updatedExamWithDetails = await Exam.findByPk(id, {
-      include: [{ model: Patient, as: 'patient' }, { model: ExamStatus, as: 'status' }]
+      include: [
+        { model: Patient, as: 'patient' },
+        { model: Appointment, as: 'appointment' },
+        { model: ExamStatus, as: 'status' }
+      ]
     });
 
     return res.status(200).json({ message: "Exame atualizado com sucesso!", exam: updatedExamWithDetails });
@@ -156,6 +188,41 @@ router.delete("/:id", async (req, res) => {
   } catch (err) {
     console.error("Erro ao deletar exame:", err);
     return res.status(500).json({ error: "Falha ao deletar exame.", details: err.message });
+  }
+});
+
+/**
+ * @route   GET /exams/appointments/:appointmentId
+ * @desc    Busca todos os exames vinculados a uma consulta
+ */
+router.get("/appointments/:appointmentId", async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+
+    const appointment = await Appointment.findByPk(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ error: "Consulta não encontrada." });
+    }
+
+    const exams = await Exam.findAll({
+      where: {
+        appointment_id: appointmentId
+      },
+      include: [
+        {
+          model: ExamStatus,
+          as: 'status',
+          attributes: ['id', 'description']
+        }
+      ],
+      order: [['requestDate', 'DESC']]
+    });
+
+    return res.status(200).json({ exams });
+
+  } catch (err) {
+    console.error("Erro ao buscar exames da consulta:", err);
+    return res.status(500).json({ error: "Falha ao buscar os exames da consulta.", details: err.message });
   }
 });
 

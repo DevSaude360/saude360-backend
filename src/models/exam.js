@@ -17,6 +17,14 @@ Exam.init({
       key: 'id',
     }
   },
+  appointment_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'appointments',
+      key: 'id'
+    }
+  },
   examType: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -53,7 +61,7 @@ Exam.init({
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'exam_status',
+      model: 'exam_statuses',
       key: 'id',
     }
   },

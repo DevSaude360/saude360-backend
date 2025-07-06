@@ -1,6 +1,8 @@
 const { DataTypes, Model } = require("sequelize");
 const sequelize = require("../config/database");
 const { supabase } = require("../config/supabase");
+const Category = require('./Category');
+
 
 class Document extends Model {}
 
@@ -41,7 +43,16 @@ Document.init({
             const { data } = supabase.storage.from(bucketName).getPublicUrl(this.storagePath);
             return data.publicUrl;
         }
-    }
+    },
+    category_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: {
+            model: Category,
+            key: 'id',
+        },
+        onDelete: 'SET NULL',
+    },
 }, {
     sequelize,
     modelName: "Document",

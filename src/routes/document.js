@@ -4,6 +4,7 @@ const multer = require("multer");
 const { supabaseAdmin } = require("../config/supabase");
 const Document = require("../models/Document");
 const Patient = require("../models/Patient");
+const Category = require("../models/Category");
 
 const tiposDeArquivoPermitidos = [
     'image/jpeg',
@@ -46,7 +47,7 @@ router.post(
                 return res.status(400).json({ error: "Nenhum arquivo enviado. O campo deve se chamar 'documento'." });
             }
 
-            const { patientId, documentType } = req.body;
+            const { patientId, documentType, categoryId } = req.body;
             if (!patientId || !documentType) {
                 return res.status(400).json({ error: "O ID do paciente (patientId) e o tipo de documento (documentType) são obrigatórios." });
             }
@@ -71,6 +72,7 @@ router.post(
             const newDocument = await Document.create({
                 patient_id: patientId,
                 documentType: documentType,
+                category_id: categoryId ? parseInt(categoryId) : null,
                 fileName: file.originalname,
                 storagePath: data.path,
                 mimeType: file.mimetype,
@@ -107,15 +109,91 @@ router.get("/patient/:patientId", async (req, res) => {
             return res.status(404).json({ error: "Paciente não encontrado." });
         }
 
-        const documents = await Document.findAll({
+        const categories = await Category.findAll({
             where: { patient_id: patientId },
+            include: {
+                model: Document,
+                as: 'documents',
+            },
+            order: [['name', 'ASC']],
+        });
+
+        const uncategorizedDocuments = await Document.findAll({
+            where: {
+                patient_id: patientId,
+                category_id: null,
+            },
             order: [['createdAt', 'DESC']],
         });
 
-        res.status(200).json({ documents });
+        res.status(200).json({
+            categories: categories,
+            uncategorized: uncategorizedDocuments,
+        });
+
     } catch (err) {
-        console.error("Erro ao buscar documentos do paciente:", err);
+        console.error("Erro na rota de busca de documentos:", err);
         res.status(500).json({ error: "Falha ao buscar documentos." });
+    }
+});
+
+/**
+ * @route   DELETE /documents/:id
+ * @desc    Exclui um documento específico
+ */
+router.delete("/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const document = await Document.findByPk(id);
+        if (!document) {
+            return res.status(404).json({ error: "Documento não encontrado." });
+        }
+
+        const { error: storageError } = await supabaseAdmin.storage
+            .from('document-patient')
+            .remove([document.storagePath]);
+
+        if (storageError) {
+            console.error("Aviso: Falha ao remover o ficheiro do Supabase Storage. O ficheiro pode precisar de remoção manual:", storageError.message);
+        }
+
+        await document.destroy();
+
+        res.status(200).json({ message: "Documento excluído com sucesso!" });
+
+    } catch (err) {
+        console.error("Erro ao excluir o documento:", err);
+        res.status(500).json({ error: "Falha ao excluir o documento." });
+    }
+});
+
+/**
+ * @route   PUT /documents/:id
+ * @desc    Atualiza um documento (tipo e/ou categoria)
+ */
+router.put("/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { documentType, categoryId } = req.body;
+
+        const document = await Document.findByPk(id);
+        if (!document) {
+            return res.status(404).json({ error: "Documento não encontrado." });
+        }
+        if (documentType !== undefined) {
+            document.documentType = documentType;
+        }
+        if (categoryId !== undefined) {
+            document.category_id = categoryId;
+        }
+
+        await document.save();
+
+        res.status(200).json(document);
+
+    } catch (err) {
+        console.error("Erro ao atualizar o documento:", err);
+        res.status(500).json({ error: "Falha ao atualizar o documento." });
     }
 });
 

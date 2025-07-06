@@ -9,6 +9,7 @@ const Exam = require('./Exam');
 const ExamStatus = require('./ExamStatus');
 const Document = require('./Document');
 const Prescription = require('./prescription');
+const Category = require('./Category');
 
 Credential.hasOne(Patient,   { foreignKey: "credential_id" });
 Patient.belongsTo(Credential, { foreignKey: "credential_id" });
@@ -43,6 +44,12 @@ Appointment.hasMany(Prescription, { foreignKey: 'appointment_id', as: 'prescript
 Prescription.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
 Patient.hasMany(Prescription, { foreignKey: 'patient_id', as: 'prescriptions' });
 
+Patient.hasMany(Category, { foreignKey: 'patient_id', as: 'categories' });
+Category.belongsTo(Patient, { foreignKey: 'patient_id', as: 'patient' });
+
+Category.hasMany(Document, { foreignKey: 'category_id', as: 'documents' });
+Document.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
+
 module.exports = {
     sequelize,
     Credential,
@@ -54,4 +61,5 @@ module.exports = {
     ExamStatus,
     Document,
     Prescription,
+    Category,
 };

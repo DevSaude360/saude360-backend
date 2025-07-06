@@ -43,7 +43,7 @@ router.get("/appointment/:appointmentId", async (req, res) => {
         const { appointmentId } = req.params;
         const prescriptions = await Prescription.findAll({
             where: { appointment_id: appointmentId },
-            order: [['createdAt', 'ASC']]
+            order: [['created_at', 'ASC']]
         });
 
         res.json(prescriptions);
@@ -90,7 +90,7 @@ router.get("/patient/:patientId", async (req, res) => {
 
         const prescriptions = await Prescription.findAll({
             where: { patient_id: patientId },
-            order: [['createdAt', 'DESC']],
+            order: [['created_at', 'DESC']],
             include: [
                 {
                     model: Appointment,

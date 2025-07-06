@@ -54,8 +54,9 @@ Prescription.init({
     sequelize,
     modelName: "Prescription",
     tableName: "prescriptions",
-    underscored: true,
     timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
 });
 
 module.exports = Prescription;

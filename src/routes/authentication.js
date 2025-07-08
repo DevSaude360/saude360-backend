@@ -163,4 +163,41 @@ router.post("/login", async (req, res) => {
   }
 });
 
+/**
+ * @route   POST /authentication/check-email
+ * @desc    Verifica se um usuário existe com o e-mail e se já possui senha.
+ */
+router.post("/check-email", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "O e-mail é obrigatório." });
+    }
+
+    const patient = await Patient.findOne({ where: { email } });
+    const professional = await Profissional.findOne({ where: { email } });
+
+    const user = patient || professional;
+
+    if (!user) {
+      return res.status(404).json({ error: "Nenhum usuário encontrado com este e-mail." });
+    }
+
+    const cred = await Credential.findByPk(user.credential_id);
+    if (!cred) {
+      return res.status(404).json({ error: "Credencial associada não encontrada." });
+    }
+
+    if (cred.password) {
+      return res.json({ status: 'PASSWORD_EXISTS' });
+    } else {
+      return res.json({ status: 'NEEDS_PASSWORD_SETUP' });
+    }
+
+  } catch (err) {
+    console.error("Erro ao verificar e-mail:", err);
+    return res.status(500).json({ error: "Erro interno no servidor." });
+  }
+});
+
 module.exports = router;

@@ -15,6 +15,11 @@ router.post("/", async (req, res) => {
     if (!email || !name) {
       return res.status(400).json({ error: "Nome e e-mail são obrigatórios para registrar paciente." });
     }
+    console.log("Corpo da requisição recebido:", req.body);
+
+    if (birth_date && isNaN(new Date(birth_date).getTime())) {
+      return res.status(400).json({ error: "Formato de data de nascimento inválido." });
+    }
 
     const existeCred = await Credential.findOne({ where: { email } });
     if (existeCred) {

@@ -274,7 +274,8 @@ router.put("/:id", async (req, res) => {
       professionalSuggestedDate,
       professionalSuggestionReason,
       patientRescheduleRejectionReason,
-      patientSuggestionReason
+      patientSuggestionReason,
+      professional_notes
     } = req.body;
 
     let updateData = {};
@@ -338,6 +339,10 @@ router.put("/:id", async (req, res) => {
     }
     if (patientSuggestionReason !== undefined) {
       updateData.patient_suggestion_reason = patientSuggestionReason;
+      houveAlteracao = true;
+    }
+    if (professional_notes !== undefined) {
+      updateData.professional_notes = professional_notes;
       houveAlteracao = true;
     }
 

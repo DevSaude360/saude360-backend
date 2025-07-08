@@ -106,55 +106,60 @@ router.get("/prontuarios/:id", async (req, res) => {
   }
 });
 
-  /**
-   * @route   POST /deepseek/remedios
-   * @desc    Busca informações de um remédio.
-   */
-  router.post("/remedios", async (req, res) => {
-    try {
-      const { nomeRemedio } = req.body;
-      if (!nomeRemedio) return res.status(400).json({ error: "O campo 'nomeRemedio' é obrigatório!" });
+/**
+ * @route   POST /deepseek/remedios
+ * @desc    Busca informações de um remédio, incluindo necessidade de receita.
+ */
+router.post("/remedios", async (req, res) => {
+  try {
+    const { nomeRemedio } = req.body;
+    if (!nomeRemedio) return res.status(400).json({ error: "O campo 'nomeRemedio' é obrigatório!" });
 
-      const prompt = `
+    const prompt = `
       Pesquise informações sobre o remédio "${nomeRemedio}" com foco no mercado brasileiro.
 
       Sua resposta deve ser **apenas** um objeto JSON puro e completo, sem formatação extra como \`\`\`json.
 
-      O JSON deve conter os seguintes campos: "nome", "valor_aproximado", "principio_ativo", "fabricante" e "descricao".
+      // 1. Adicionado "necessita_receita" à lista de campos
+      O JSON deve conter os seguintes campos: "nome", "valor_aproximado", "principio_ativo", "fabricante", "descricao" e "necessita_receita".
 
       **Regras Cruciais para a Resposta:**
       1. O campo "valor_aproximado" **deve sempre** conter uma estimativa de preço em Reais, usando o símbolo "R$". Por exemplo: "R$ 10,50 - R$ 25,00".
       2. Se um preço específico não for encontrado, o valor do campo "valor_aproximado" deve ser a string "Valor não encontrado".
       3. Se o remédio em si for inválido ou não encontrado, retorne um JSON com a chave "remedio" e o valor null.
+      // 2. Adicionada nova regra para o campo de receita
+      4. O campo "necessita_receita" deve ser um valor booleano (\`true\` se o remédio exigir receita médica, \`false\` caso seja de venda livre).
 
       **Exemplo de resposta bem-sucedida:**
+      // 3. Adicionado o novo campo ao exemplo de resposta
       {
         "nome": "Dipirona Monoidratada 500mg",
         "valor_aproximado": "R$ 5,00 - R$ 15,00",
         "principio_ativo": "Dipirona Monoidratada",
         "fabricante": "Medley",
-        "descricao": "Analgésico e antitérmico indicado para o alívio de dores e febre."
+        "descricao": "Analgésico e antitérmico indicado para o alívio de dores e febre.",
+        "necessita_receita": false
       }
     `;
 
-      const response = await axios.post(DEEPSEEK_API_URL, {
-            model: "deepseek-chat",
-            messages: [{ role: "user", content: prompt }],
-            temperature: 0.2,
-          }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${DEEPSEEK_API_KEY}` } }
-      );
+    const response = await axios.post(DEEPSEEK_API_URL, {
+          model: "deepseek-chat",
+          messages: [{ role: "user", content: prompt }],
+          temperature: 0.2,
+        }, { headers: { "Content-Type": "application/json", Authorization: `Bearer ${DEEPSEEK_API_KEY}` } }
+    );
 
-      const respostaBruta = response.data.choices[0].message.content || "{}";
-      const respostaLimpa = respostaBruta.replace(/```json|```/g, "").trim();
-      const jsonFinal = JSON.parse(respostaLimpa);
+    const respostaBruta = response.data.choices[0].message.content || "{}";
+    const respostaLimpa = respostaBruta.replace(/```json|```/g, "").trim();
+    const jsonFinal = JSON.parse(respostaLimpa);
 
-      if (jsonFinal.remedio === null) return res.status(404).json({ message: "Remédio não encontrado." });
-      res.json(jsonFinal);
-    } catch (error) {
-      console.error("ERRO DETALHADO em /remedios:", error.message);
-      res.status(500).json({ error: "Falha ao buscar informações do remédio." });
-    }
-  });
+    if (jsonFinal.remedio === null) return res.status(404).json({ message: "Remédio não encontrado." });
+    res.json(jsonFinal);
+  } catch (error) {
+    console.error("ERRO DETALHADO em /remedios:", error.message);
+    res.status(500).json({ error: "Falha ao buscar informações do remédio." });
+  }
+});
 
 
   /**

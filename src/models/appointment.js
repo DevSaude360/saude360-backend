@@ -25,6 +25,10 @@ Appointment.init({
   reason: {
     type: DataTypes.TEXT,
   },
+  professional_notes: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   status_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

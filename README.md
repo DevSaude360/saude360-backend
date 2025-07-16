@@ -70,35 +70,6 @@ Siga os passos abaixo para configurar o ambiente de desenvolvimento local.
 
 Este projeto utiliza variáveis de ambiente para armazenar informações sensíveis, como chaves de API e credenciais de banco de dados.
 
-1.  **Crie um arquivo `.env`:**
-
-    Faça uma cópia do arquivo de exemplo `.env.example` para criar o seu arquivo de configuração local.
-
-    ```bash
-    cp .env.example .env
-    ```
-
-2.  **Configure o arquivo `.env`:**
-
-    Abra o arquivo `.env` que você acabou de criar e preencha as variáveis com os seus dados.
-
-    ```env
-    # -------------------------------------
-    # Exemplo de conteúdo do .env
-    # -------------------------------------
-
-    # Configuração do Banco de Dados (PostgreSQL / Supabase)
-    # Encontre essa string de conexão nas configurações do seu projeto Supabase
-    DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
-
-    # Segredo para assinatura do JWT (JSON Web Token)
-    # Use um gerador de senhas fortes para criar este segredo
-    JWT_SECRET="insira_um_segredo_muito_forte_aqui"
-
-    # Porta onde o servidor irá rodar
-    PORT=3333
-    ```
-
 -----
 
 ## ▶️ Executando o Servidor
@@ -121,14 +92,6 @@ Com tudo configurado, você pode iniciar o servidor.
     npm start
     ```
 
-Após executar um dos comandos, você deverá ver uma mensagem no terminal confirmando que o servidor está rodando, por exemplo: `🚀 Server is running on http://localhost:3333`.
+Após executar um dos comandos, você deverá ver uma mensagem no terminal confirmando que o servidor está rodando, por exemplo: `local host: 5001`.
 
 -----
-
-## 📖 Documentação da API
-
-Para testar e interagir com os endpoints da API, recomendamos o uso de ferramentas como **[Postman](https://www.postman.com/)** ou **[Insomnia](https://insomnia.rest/)**.
-
-A documentação detalhada de cada endpoint, incluindo os parâmetros necessários e os exemplos de resposta, pode ser encontrada no seguinte link (ou acessando uma rota específica, se o Swagger estiver configurado):
-
-➡️ **[Acessar Documentação da API (Ex: Postman Collection)](https://www.google.com/search?q=https://documenter.getpostman.com/view/your-collection-id)** (substitua pelo link da sua documentação).
